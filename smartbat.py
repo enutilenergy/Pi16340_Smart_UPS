@@ -26,8 +26,10 @@ class i2c:
       fcntl.ioctl(self.fr, I2C_SLAVE, device)
       fcntl.ioctl(self.fw, I2C_SLAVE, device)
 
-   def write(self, bytes):
-      self.fw.write(bytes)
+   def write(self, data):
+      if type(data) is list:
+            data = bytes(data)
+      self.fw.write(data)
 
    def read(self, bytes):
       return self.fr.read(bytes)
@@ -54,6 +56,9 @@ class i2c:
       
       return var_int
 
+
+
+'''
 
 #<<----------------------------------------------------------------------------------------
 #comment out this section below if you would like to import the class into your own program
@@ -203,6 +208,9 @@ print"Supply Power Level Status: ", pwrlvl_res
 testpoll.close()
 
 
+'''
+
+
 if SENSOR_HUMIDITY == "Digital":
 
     #<<----------------------------------------------------------------------------------------
@@ -215,8 +223,9 @@ if SENSOR_HUMIDITY == "Digital":
     print("Reading temperature and humidity sensor")
 
     #send measurement command
-    testpoll.write(0x2C)
-    testpoll.write(0x06)
+    testpoll.write([0x2C, 0x06])
+    #testpoll.write("0x2C")
+    #testpoll.write("0x06")
 
     time.sleep(0.5)
 
