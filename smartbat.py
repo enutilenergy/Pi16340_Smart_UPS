@@ -116,24 +116,27 @@ for i in range(samples):
       time.sleep(sample_delay)
 
 
+
+#m = memoryview(bat)
+#bat_list = map(ord,m)
+#print("bat_list: ", bat_list)
+
+#Battery Level calculation---------------
+#bat_int = bat_list[0]*256 + bat_list[1]
+#print("bat_int: ", bat_int)
+
+bat_avg_int = bat_avg / samples
+battery = (float(bat_avg_int) * 0.00322) / 0.7674
+print "Battery: ", battery ,"V"
+
+
+#----------------------------------------
+
+
 if SENSOR_HUMIDITY == "Analog":
 
     #Analog sensor is read directly from the MSP439 MCU and reported back to the Pi once querried via I2C
-    
-    #m = memoryview(bat)
-    #bat_list = map(ord,m)
-    #print("bat_list: ", bat_list)
-
-    #Battery Level calculation---------------
-    #bat_int = bat_list[0]*256 + bat_list[1]
-    #print("bat_int: ", bat_int)
-
-    bat_avg_int = bat_avg / samples
-    battery = (float(bat_avg_int) * 0.00322) / 0.7674
-    print "Battery: ", battery ,"V"
-
-
-    #----------------------------------------
+ 
 
     #m1 = memoryview(hum)
     #hum_list = map(ord,m1)
@@ -207,6 +210,15 @@ if SENSOR_HUMIDITY == "Digital":
     #The Humidity sensor is on address 0x44 and we need to talk to it as another device
     #---------------------------------------------------------------------------------------->>
     testpoll = i2c(0x44,1)
+
+    print("#----------------------------------------------------------------------------------------")
+    print("Reading temperature and humidity sensor")
+
+    #send measurement command
+    testpoll.write(0x2C)
+    testpoll.write(0x06)
+
+    time.sleep(0.5)
 
     #read 6 bytes cTempMSB, cTempLSB, cTempCRC, HumMSB, HumLSB, HumCRC
     result = testpoll.read(6)
