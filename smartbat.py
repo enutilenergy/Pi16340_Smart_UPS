@@ -7,6 +7,7 @@ import io
 import fcntl
 import struct
 import time
+import smbus
 
 I2C_SLAVE=0x0703
 
@@ -58,7 +59,7 @@ class i2c:
 
 
 
-'''
+
 
 #<<----------------------------------------------------------------------------------------
 #comment out this section below if you would like to import the class into your own program
@@ -208,49 +209,40 @@ print"Supply Power Level Status: ", pwrlvl_res
 testpoll.close()
 
 
-'''
 
 
-if SENSOR_HUMIDITY == "Digital":
+#Read the temperature-humidity sensor using the smbus module-----------------------#
 
-    #<<----------------------------------------------------------------------------------------
-    #comment out this section below if you would like to import the class into your own program
-    #The Humidity sensor is on address 0x44 and we need to talk to it as another device
-    #---------------------------------------------------------------------------------------->>
-    testpoll = i2c(0x44,1)
 
-    print("#----------------------------------------------------------------------------------------")
-    print("Reading temperature and humidity sensor")
 
-    #send measurement command
-    testpoll.write([0x2C, 0x06])
-    #testpoll.write("0x2C")
-    #testpoll.write("0x06")
+#select the bus used in communications, usually 1 but could be zero, this can be checked using the i2cdetect -y 1 or 0 command
+i2cbus = smbus.SMBus(1)
 
-    time.sleep(0.5)
+#address of sensor configured as 0x44
+th_address = 0x44
+startReg = 0x00
 
-    #read 6 bytes cTempMSB, cTempLSB, cTempCRC, HumMSB, HumLSB, HumCRC
-    result = testpoll.read(6)
-    print("result: ", result)
+#now send the measurement command with high accuracy
+i2cbus.write_i2c_block_data(th_address, 0x2C, [0x06])
 
-    cTemperatureBytes = result[:2]
-    cTemperatureCRC= result[2:3]
-    HumidityBytes = result[3:5]
-    HumidityCRC = result[5:6]
+#we need to give a short delay for the measurements to be taken
+time.sleep(0.5)
 
-    print("cTemperatureBytes: ", cTemperatureBytes)
-    print("cTemperatureCRC: ", cTemperatureCRC)
-    print("HumidityBytes: ", HumidityBytes)
-    print("HumidityCRC: ", HumidityCRC)
 
-    res = testpoll.get_int(cTemperatureBytes)
-    cTemperatureVal = ((res * 175)  / 65535.0) - 45
-    fTemperatureVal = cTemperatureVal * 1.8 + 32
-    res = testpoll.get_int(HumidityBytes)
-    HumidityVal = ((res) * 100) / 65535.0
+#according to the data sheet the measurement for each temperature and humidity are followed by a CRC byte
+# tempHi, tempLo, tempCRC, humHi, humLo, humCRC 
+#so 6 bytes in total will be read
+sensorBytes = bus.read_i2c_block_data(th_address, startReg, 0x06)
 
-    print("Temperature:  %.2F C" %cTemperatureVal)
-    print("Temperature:  %.2F F" %fTemperatureVal)
-    print("HumidityVal: %.2F %%RH" %HumidityVal)
+#convert the data to a readable format
+TemperatureWord = (sensorBytes[0] * 256.0) + sensorBytes[1]) 
+TemperatureC = ((TemperatureWord * 175.0) / 65535.0) - 45
+TemperatureF = (TemperatureC * 1.8) + 32
 
-    testpoll.close()
+humidityWord = (sensorBytes[3] * 256 + sensorBytes[4]) 
+HumidityVal = (humidityWord * 100.0) / 65535.0
+
+
+print("Temperature:  %.2F C", cTemperatureVal)
+print("Temperature:  %.2F F", fTemperatureVal)
+print("HumidityVal: %.2F RH", HumidityVal)
