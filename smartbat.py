@@ -228,8 +228,8 @@ if SENSOR_HUMIDITY == "Digital":
     res = testpoll.get_int(HumidityBytes)
     HumidityVal = ((res) * 100) / 65535.0
 
-    print("Temperature:  %.2F C", %cTemperatureVal)
-    print("Temperature:  %.2F F", %fTemperatureVal)
-    print("HumidityVal: %.2F %%RH", %HumidityVal)
+    print("Temperature:  %.2F C" %cTemperatureVal)
+    print("Temperature:  %.2F F" %fTemperatureVal)
+    print("HumidityVal: %.2F %%RH" %HumidityVal)
 
     testpoll.close()
